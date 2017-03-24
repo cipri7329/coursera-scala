@@ -77,6 +77,10 @@ class FunSetSuite extends FunSuite {
     val s1 = singletonSet(1)
     val s2 = singletonSet(2)
     val s3 = singletonSet(3)
+    val s4 = singletonSet(4)
+
+    val s10 = singletonSet(10)
+    val s15 = singletonSet(15)
   }
 
   /**
@@ -98,17 +102,172 @@ class FunSetSuite extends FunSuite {
        * the test fails. This helps identifying which assertion failed.
        */
       assert(contains(s1, 1), "Singleton")
+      assert(contains(s2, 2), "Singleton")
+      assert(contains(s3, 3), "Singleton")
     }
   }
 
   test("union contains all elements of each set") {
     new TestSets {
-      val s = union(s1, s2)
-      assert(contains(s, 1), "Union 1")
-      assert(contains(s, 2), "Union 2")
-      assert(!contains(s, 3), "Union 3")
+      val s1_2 = union(s1, s2)
+      assert(contains(s1_2, 1), "Union 1")
+      assert(contains(s1_2, 2), "Union 2")
+      assert(!contains(s1_2, 3), "Union 3")
+
+      val s3t10 = union(s3, s10)
+      assert(contains(s3t10, 3), "Union s3t10 3")
+      assert(contains(s3t10, 10), "Union s3t10 10")
+      assert(!contains(s3t10, 2), "Union s3t10 2")
+      assert(!contains(s3t10, 11), "Union s3t10 11")
+
+      val s1t2t3t10 = union(s1_2, s3t10)
+      assert(contains(s1t2t3t10, 1), "Union s1t2t3t10 1")
+      assert(contains(s1t2t3t10, 2), "Union s1t2t3t10 2")
+      assert(contains(s1t2t3t10, 3), "Union s1t2t3t10 3")
+      assert(contains(s1t2t3t10, 10), "Union s1t2t3t10 10")
+
+      assert(!contains(s1t2t3t10, 0), "Union s1t2t3t10 0")
+      assert(!contains(s1t2t3t10, 4), "Union s1t2t3t10 4")
     }
   }
+
+
+
+  test("intersect - contains only common elements of each set") {
+    new TestSets {
+      val s1_2 = union(s1, s2)
+      val s3t10 = union(s3, s10)
+      val s1t2t3t10 = union(s1_2, s3t10)
+
+      val s2_3 = union(s2, s3)
+      val s1_2_4 = union(s1_2, s4)
+
+      val i23 = intersect(s2_3, s1t2t3t10)
+      assert(contains(i23, 2), "Intersect i23 2")
+      assert(contains(i23, 3), "Intersect i23 3")
+      assert(!contains(i23, 1), "Intersect i23 1")
+      assert(!contains(i23, 10), "Intersect i23 10")
+
+      val i12 = intersect(s1_2_4, s1t2t3t10)
+      assert(contains(i12, 1), "Intersect i23 1")
+      assert(contains(i12, 2), "Intersect i23 2")
+      assert(!contains(i12, 4), "Intersect i23 4")
+      assert(!contains(i12, 3), "Intersect i23 3")
+      assert(!contains(i12, 10), "Intersect i23 10")
+    }
+  }
+
+
+  test("diff - contains all elements of `s` that are not in `t`") {
+    new TestSets {
+      val s1_2 = union(s1, s2)
+      val s3t10 = union(s3, s10)
+      val s1t2t3t10 = union(s1_2, s3t10)
+
+      val s2_3 = union(s2, s3)
+      val s1_2_4 = union(s1_2, s4)
+
+      val i23 = diff(s2_3, s1t2t3t10) //empty set
+      assert(!contains(i23, 2), "Intersect i23 2")
+      assert(!contains(i23, 3), "Intersect i23 3")
+      assert(!contains(i23, 1), "Intersect i23 1")
+      assert(!contains(i23, 10), "Intersect i23 10")
+
+      val i12 = diff(s1_2_4, s1t2t3t10)
+      assert(!contains(i12, 1), "Intersect i23 1")
+      assert(!contains(i12, 2), "Intersect i23 2")
+      assert(contains(i12, 4), "Intersect i23 4")
+      assert(!contains(i12, 3), "Intersect i23 3")
+      assert(!contains(i12, 10), "Intersect i23 10")
+    }
+  }
+
+
+  test("filter - Returns the subset of `s` for which `p` holds.") {
+    new TestSets {
+      val s1_2 = union(s1, s2)
+      val s3t10 = union(s3, s10)
+      val s1t2t3t10 = union(s1_2, s3t10)
+
+      val s2_3 = union(s2, s3)
+      val s1_2_4 = union(s1_2, s4)
+
+      val i23 = filter(s2_3, _ > 2) //empty set
+      assert(!contains(i23, 2), "Intersect i23 2")
+      assert(contains(i23, 3), "Intersect i23 3")
+      assert(!contains(i23, 1), "Intersect i23 1")
+      assert(!contains(i23, 10), "Intersect i23 10")
+
+      val i12 = filter(s1_2_4, _ % 2 == 0)
+      assert(!contains(i12, 1), "Intersect i23 1")
+      assert(contains(i12, 2), "Intersect i23 2")
+      assert(contains(i12, 4), "Intersect i23 4")
+      assert(!contains(i12, 3), "Intersect i23 3")
+      assert(!contains(i12, 10), "Intersect i23 10")
+    }
+  }
+
+
+  test("forall - Returns whether all bounded integers within `s` satisfy `p`") {
+    new TestSets {
+      val s1_2 = union(s1, s2)
+      val s3t10 = union(s3, s10)
+      val s1t2t3t10 = union(s1_2, s3t10)
+
+      val s2_3 = union(s2, s3)
+      val s1_2_4 = union(s1_2, s4)
+
+
+      assert(forall(s1_2_4, _ < 5), "forall s1_2_4 < 5")
+      assert(!forall(s1_2_4, _ < 4), "forall s1_2_4 < 4")
+      assert(forall(s1t2t3t10, _ < 15), "forall s1t2t3t10 < 15")
+      assert(!forall(s1t2t3t10, _ < 0), "forall s1t2t3t10 < 0")
+    }
+  }
+
+
+
+  test("exists - Returns whether there exists a bounded integer within `s` that satisfies `p`.") {
+    new TestSets {
+      val s1_2 = union(s1, s2)
+      val s3t10 = union(s3, s10)
+      val s1t2t3t10 = union(s1_2, s3t10)
+
+      val s2_3 = union(s2, s3)
+      val s1_2_4 = union(s1_2, s4)
+
+
+      assert(exists(s1_2_4, _ < 5), "exists s1_2_4 < 5")
+      assert(!exists(s1_2_4, _ < 1), "exists s1_2_4 < 1")
+      assert(exists(s1t2t3t10, _ < 15), "exists s1t2t3t10 < 15")
+      assert(!exists(s1t2t3t10, _ == 4), "exists s1t2t3t10 == 4")
+    }
+  }
+
+
+  test("map - Returns a set transformed by applying `f` to each element of `s`") {
+    new TestSets {
+      val s1_2 = union(s1, s2)
+      val s3t10 = union(s3, s10)
+      val s1t2t3t10 = union(s1_2, s3t10)
+
+      val s2_3 = union(s2, s3)
+      val s1_2_4 = union(s1_2, s4)
+
+      printSet(s1_2_4)
+      printSet(map(s1_2_4, _ * 2))
+
+      assert(contains(map(s1_2_4, _ * 2), 8), "map s1_2_4 _ * 2")
+      assert(contains(map(s1_2_4, _ * 3), 3), "map s1_2_4 _ * 2")
+      assert(contains(map(s1_2_4, _ * 3), 6), "map s1_2_4 _ * 2")
+      assert(contains(map(s1_2_4, _ * 3), 12), "map s1_2_4 _ * 2")
+      assert(!contains(map(s1_2_4, _ * 3), 1), "map s1_2_4 _ * 2")
+      assert(!contains(map(s1_2_4, _ * 3), 2), "map s1_2_4 _ * 2")
+      assert(!contains(map(s1_2_4, _ * 3), 4), "map s1_2_4 _ * 2")
+
+    }
+  }
+
 
 
 }

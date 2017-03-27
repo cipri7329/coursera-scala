@@ -74,6 +74,12 @@ class TweetSetSuite extends FunSuite {
     }
   }
 
+
+  /**
+    * DESCENDING TESTS
+    */
+
+
   test("descending: set5") {
     new TestSets {
       val trends = set5.descendingByRetweet

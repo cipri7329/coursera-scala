@@ -140,10 +140,28 @@ object Huffman {
    * If `trees` is a list of less than two elements, that list should be returned
    * unchanged.
    */
-    def combine(trees: List[CodeTree]): List[CodeTree] = ???
+    def combine(trees: List[CodeTree]): List[CodeTree] = trees match {
+      case _ :: Nil => trees
+      case Leaf(c1, w1) :: Leaf(c2, w2) :: tail => {
+        if (c1 == c2) Leaf(c1, w1 + w2) :: tail
+        else  (Fork(Leaf(c1, w1), Leaf(c2, w2), List(c1, c2), w1 + w2) :: tail)
+          .sortBy{ sortByWeight }
+      }
+      case Leaf(c1, w1) :: Fork(left, right, chars, wf) :: tail =>
+        Fork(Leaf(c1, w1), Fork(left, right, chars, wf), c1 :: chars, w1 + wf) :: tail
+          .sortBy{ sortByWeight }
+      case Fork(left1, right1, chars1, wf1) :: Fork(left2, right2, chars2, wf2) :: tail =>
+        Fork(Fork(left1, right1, chars1, wf1), Fork(left2, right2, chars2, wf2), chars2 ::: chars1, wf1 + wf2) :: tail
+          .sortBy{ sortByWeight }
+      case _ => List()
+    }
 
 
-  
+    def sortByWeight(element : CodeTree): Int = element match {
+      case Leaf(c, w) => w;
+      case Fork(left, right, chars, wf) => wf
+    }
+
 
   /**
    * This function will be called in the following way:
@@ -162,15 +180,25 @@ object Huffman {
    *    the example invocation. Also define the return type of the `until` function.
    *  - try to find sensible parameter names for `xxx`, `yyy` and `zzz`.
    */
-    def until(xxx: ???, yyy: ???)(zzz: ???): ??? = ???
-  
+    def until(checkSingleton: List[CodeTree] => Boolean, combineFunction: List[CodeTree] => List[CodeTree])(trees: List[CodeTree]): List[CodeTree] = {
+      if(checkSingleton(trees)) trees
+      else {
+        val reduced = combineFunction(trees)
+        until(checkSingleton, combineFunction)(reduced)
+      }
+    }
+
+
+
   /**
    * This function creates a code tree which is optimal to encode the text `chars`.
    *
    * The parameter `chars` is an arbitrary text. This function extracts the character
    * frequencies from that text and creates a code tree based on them.
    */
-    def createCodeTree(chars: List[Char]): CodeTree = ???
+    def createCodeTree(chars: List[Char]): CodeTree = {
+      until(singleton, combine)(makeOrderedLeafList(times(chars))).head
+    }
   
 
 
@@ -255,4 +283,12 @@ object Main extends App {
 
   val w = weight(t1)
   println(w)
+
+
+  val leafList3 = List(
+    Fork(Leaf('g',2),Leaf('h',2), List('g', 'h'),4),
+    Fork(Leaf('i',3), Fork(Leaf('e',1), Leaf('t',2), List('e', 't'),3), List('i', 'e', 't'), 6))
+
+  val combined1 = Huffman.until(Huffman.singleton, Huffman.combine)(leafList3)
+  println(combined1)
 }

@@ -54,7 +54,23 @@ class HuffmanSuite extends FunSuite {
 
   test("combine of some leaf list") {
     val leaflist = List(Leaf('e', 1), Leaf('t', 2), Leaf('x', 4))
-    assert(combine(leaflist) === List(Fork(Leaf('e',1),Leaf('t',2),List('e', 't'),3), Leaf('x',4)))
+    assert(combine(leaflist) === List(Fork(Leaf('e',1),Leaf('t',2), List('e', 't'),3), Leaf('x',4)))
+  }
+
+
+  test("combine of some leaf list - order change") {
+    val leaflist = List(Leaf('g', 2), Leaf('h', 2), Leaf('i', 3), Fork(Leaf('e',1),Leaf('t',2), List('e', 't'),3))
+    assert(combine(leaflist) === List(Leaf('i',3), Fork(Leaf('e',1),Leaf('t',2), List('e', 't'),3), Fork(Leaf('g',2),Leaf('h',2), List('g', 'h'),4)))
+  }
+
+
+  test("until some leaf list") {
+    val leaflist = List(Leaf('g', 2), Leaf('h', 2), Leaf('i', 3), Fork(Leaf('e',1),Leaf('t',2), List('e', 't'),3))
+    val leafList2 = List(Leaf('i',3), Fork(Leaf('e',1),Leaf('t',2), List('e', 't'),3), Fork(Leaf('g',2),Leaf('h',2), List('g', 'h'),4))
+    val leafList3 = List(
+      Fork(Leaf('g',2),Leaf('h',2), List('g', 'h'),4),
+      Fork(Leaf('i',3), Fork(Leaf('e',1), Leaf('t',2), List('e', 't'),3), List('i', 'e', 't'), 6))
+
   }
 
 

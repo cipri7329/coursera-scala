@@ -74,6 +74,7 @@ class HuffmanSuite extends FunSuite {
   }
 
 
+
   test("decode and encode a very short text should be identity") {
     new TestTrees {
       assert(decode(t1, encode(t1)("ab".toList)) === "ab".toList)
@@ -106,6 +107,32 @@ class HuffmanTimesSuite extends FunSuite {
     }
   }
 
+}
+
+
+
+@RunWith(classOf[JUnitRunner])
+class HuffmanDecodeSuite extends FunSuite {
+  trait TestTrees {
+    val t1 = Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5)
+    val t2 = Fork(Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5), Leaf('d',4), List('a','b','d'), 9)
+
+    val charList1 = List('a', 'a', 'd', 'e', 'e', 'a', 'f', 'g', 'h', 'a', 'i', 'e')
+  }
+
+
+  test("decode t1") {
+    new TestTrees {
+      assert(decode(t1, List(0, 1)) === List('a','b'))
+    }
+  }
+
+
+  test("decode t2") {
+    new TestTrees {
+      assert(decode(t2, List(0, 0, 1, 0, 1)) === List('a','d','b'))
+    }
+  }
 
 
 }

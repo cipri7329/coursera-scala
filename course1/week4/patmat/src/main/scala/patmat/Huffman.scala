@@ -1,7 +1,7 @@
 package patmat
 
 import common._
-import patmat.Huffman.{Fork, Leaf, decode, weight}
+import patmat.Huffman._
 
 import scala.Char
 
@@ -84,22 +84,22 @@ object Huffman {
     */
   def times(chars: List[Char]): List[(Char, Int)] = {
 
-    def mapSimple(chars: List[Char]): List[(Char, Int)] = chars match {
+    def mapSize(chars: List[Char]): List[(Char, Int)] = chars match {
       case xs :: Nil => List((xs, 1))
-      case head :: tail => (head, 1) :: mapSimple(tail)
+      case head :: tail => (head, 1) :: mapSize(tail)
       case _ => List()
     }
 
-    val charUnits = mapSimple(chars)
+    val charUnits = mapSize(chars)
     val charUnitsSorted = charUnits.sortBy(_._1)
 
-    def combine(pairs: List[(Char, Int)]): List[(Char, Int)] = pairs match {
+    def combineSize(pairs: List[(Char, Int)]): List[(Char, Int)] = pairs match {
       case xs :: Nil => List(xs)
-      case p1 :: p2 :: tail => if (p1._1 == p2._1) combine((p1._1, p1._2 + p2._2) :: tail) else p1 :: combine(p2 :: tail)
+      case p1 :: p2 :: tail => if (p1._1 == p2._1) combineSize((p1._1, p1._2 + p2._2) :: tail) else p1 :: combineSize(p2 :: tail)
       case _ => List()
     }
 
-    combine(charUnitsSorted)
+    combineSize(charUnitsSorted)
   }
 
 
@@ -111,7 +111,7 @@ object Huffman {
     * of a leaf is the frequency of the character.
     */
   def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = {
-    freqs.sortBy { case (a: Char, _) => a }.map { case (a: Char, b: Int) => Leaf(a, b) }
+    freqs.sortBy { case (a: Char, b: Int) => b }.map { case (a: Char, b: Int) => Leaf(a, b) }
   }
 
 
@@ -136,27 +136,39 @@ object Huffman {
     * If `trees` is a list of less than two elements, that list should be returned
     * unchanged.
     */
-  def combine(trees: List[CodeTree]): List[CodeTree] = trees match {
-    case _ :: Nil => trees
-    case Leaf(c1, w1) :: Leaf(c2, w2) :: tail => {
-      if (c1 == c2) Leaf(c1, w1 + w2) :: tail
-      else (Fork(Leaf(c1, w1), Leaf(c2, w2), List(c1, c2), w1 + w2) :: tail)
-        .sortBy {
-          sortByWeight
-        }
-    }
-    case Leaf(c1, w1) :: Fork(left, right, chars, wf) :: tail =>
-      Fork(Leaf(c1, w1), Fork(left, right, chars, wf), c1 :: chars, w1 + wf) :: tail
-        .sortBy {
-          sortByWeight
-        }
-    case Fork(left1, right1, chars1, wf1) :: Fork(left2, right2, chars2, wf2) :: tail =>
-      Fork(Fork(left1, right1, chars1, wf1), Fork(left2, right2, chars2, wf2), chars2 ::: chars1, wf1 + wf2) :: tail
-        .sortBy {
-          sortByWeight
-        }
-    case _ => List()
+
+    def combine(trees: List[CodeTree]): List[CodeTree] = trees match {
+    case left :: right :: cs => (makeCodeTree(left, right) :: cs)
+      .sortWith((t1, t2) => weight(t1) < weight(t2))
+    case _ => trees
   }
+
+//  def combine(trees: List[CodeTree]): List[CodeTree] = trees match {
+//    case _ :: Nil => trees
+//    case Leaf(c1, w1) :: Leaf(c2, w2) :: tail => {
+//      if (c1 == c2) Leaf(c1, w1 + w2) :: tail
+//      else (Fork(Leaf(c1, w1), Leaf(c2, w2), List(c1, c2), w1 + w2) :: tail)
+//        .sortBy {
+//          sortByWeight
+//        }
+//    }
+//    case Leaf(c1, w1) :: Fork(left, right, chars, wf) :: tail =>
+//      Fork(Leaf(c1, w1), Fork(left, right, chars, wf), c1 :: chars, w1 + wf) :: tail
+//        .sortBy {
+//          sortByWeight
+//        }
+//    case Fork(left, right, chars, wf) :: Leaf(c1, w1) :: tail =>
+//      Fork(Leaf(c1, w1), Fork(left, right, chars, wf), c1 :: chars, w1 + wf) :: tail
+//        .sortBy {
+//          sortByWeight
+//        }
+//    case Fork(left1, right1, chars1, wf1) :: Fork(left2, right2, chars2, wf2) :: tail =>
+//      Fork(Fork(left1, right1, chars1, wf1), Fork(left2, right2, chars2, wf2), chars2 ::: chars1, wf1 + wf2) :: tail
+//        .sortBy {
+//          sortByWeight
+//        }
+//    case _ => trees
+//  }
 
 
   def sortByWeight(element: CodeTree): Int = element match {
@@ -183,7 +195,8 @@ object Huffman {
     *  - try to find sensible parameter names for `xxx`, `yyy` and `zzz`.
     */
   def until(checkSingleton: List[CodeTree] => Boolean, combineFunction: List[CodeTree] => List[CodeTree])(trees: List[CodeTree]): List[CodeTree] = {
-    if (checkSingleton(trees)) trees
+    if (trees.isEmpty) trees
+    else if (checkSingleton(trees)) trees
     else {
       val reduced = combineFunction(trees)
       until(checkSingleton, combineFunction)(reduced)
@@ -338,24 +351,35 @@ object Main extends App {
 
   val t1 = Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5)
   val t2 = Fork(Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5), Leaf('d',4), List('a','b','d'), 9)
+//
+//  val w = weight(t1)
+//  println(w)
+//
+//  val charList1 = List('a', 'a', 'd', 'e', 'e', 'a', 'f', 'g', 'h', 'a', 'i', 'e')
+//  createCodeTree(charList1)
+//
+//  val leafList3 = List(
+//    Fork(Leaf('g',2),Leaf('h',2), List('g', 'h'),4),
+//    Fork(Leaf('i',3), Fork(Leaf('e',1), Leaf('t',2), List('e', 't'),3), List('i', 'e', 't'), 6))
+//
+//  val combined1 = Huffman.until(Huffman.singleton, Huffman.combine)(leafList3)
+//  println(combined1)
+//
+//  val leaflist2 = List(Leaf('g', 2), Leaf('h', 2), Leaf('i', 3), Fork(Leaf('e',1),Leaf('t',2), List('e', 't'),3))
+//  val combined2 = combine(leaflist2)
+//
+//  val decoded = decode(t2, List(0, 0, 1, 0, 1))
+//  println(decoded)
 
-  val w = weight(t1)
-  println(w)
 
+  val leafList4 = List( Leaf('d', 1),  Leaf('f', 1), Leaf('g', 1), Leaf('h', 1), Leaf('i', 1), Leaf('e', 3), Leaf('a',4))
 
-  val leafList3 = List(
-    Fork(Leaf('g',2),Leaf('h',2), List('g', 'h'),4),
-    Fork(Leaf('i',3), Fork(Leaf('e',1), Leaf('t',2), List('e', 't'),3), List('i', 'e', 't'), 6))
+  val treeList = until(singleton, combine)(leafList4)
+  println(treeList)
 
-  val combined1 = Huffman.until(Huffman.singleton, Huffman.combine)(leafList3)
-  println(combined1)
-
-  val decoded = decode(t2, List(0, 0, 1, 0, 1))
-  println(decoded)
-
-  println(Huffman.decodedSecret)
-
-  println(Huffman.encode(t2)(Huffman.string2Chars("adbd")) )
-
-  println(Huffman.quickEncode(t2)(Huffman.string2Chars("adbd")) )
+//  println(Huffman.decodedSecret)
+//
+//  println(Huffman.encode(t2)(Huffman.string2Chars("adbd")) )
+//
+//  println(Huffman.quickEncode(t2)(Huffman.string2Chars("adbd")) )
 }

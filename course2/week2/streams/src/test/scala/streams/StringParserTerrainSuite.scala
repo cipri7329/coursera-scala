@@ -36,6 +36,33 @@ class StringParserTerrainSuite extends FunSuite {
         |------""".stripMargin
   }
 
+  trait Level2 extends SolutionChecker {
+    /* terrain for level 1*/
+
+    val level =
+      """ooo-------
+        |oSoooo----
+        |ooooooooo-
+        |-ooooooooo
+        |-----ooToo
+        |------ooo-""".stripMargin
+
+    val optsolution = List(Right, Right, Down, Right, Right, Right, Down)
+  }
+
+
+  test("neighborsWithHistory") {
+    new Level2 {
+
+      assert(Block(Pos(1, 1), Pos(1, 1)).legalNeighbors.length == 2)
+
+      assert(neighborsWithHistory(Block(Pos(1, 1), Pos(1, 1)), List(Left, Up)).toSet === Set(
+        (Block(Pos(1, 2), Pos(1, 3)), List(Right, Left, Up)),
+        (Block(Pos(2, 1), Pos(3, 1)), List(Down, Left, Up))))
+    }
+  }
+
+
 
 	test("terrain function level 1") {
     new Level1 {
@@ -70,7 +97,8 @@ class StringParserTerrainSuite extends FunSuite {
 
   test("isStanding - goal") {
     new Level1 {
-      assert(Block(Pos(1,3), Pos(2,3)).isStanding)
+      assert(Block(Pos(1,3), Pos(1,3)).isStanding)
+      assert(!Block(Pos(1,3), Pos(2,3)).isStanding)
       assert(!Block(Pos(2,3), Pos(2,4)).isStanding)
     }
   }
@@ -85,6 +113,7 @@ class StringParserTerrainSuite extends FunSuite {
       assert(!Block(Pos(2,3), Pos(2,4)).isLegal)
     }
   }
+
 
 
 }

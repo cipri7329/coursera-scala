@@ -2,6 +2,8 @@ package streams
 
 import common._
 
+import scala.util.Try
+
 /**
  * This trait represents the layout and building blocks of the game
  */
@@ -23,7 +25,7 @@ trait GameDef {
    *   2 o # o o    # is at position Pos(2, 1)
    *   3 o o o o
    *
-   *   ^
+   *   ^^
    *   |
    *
    *   row axis
@@ -99,12 +101,28 @@ trait GameDef {
      * changed by `d1` and `d2`, respectively.
      */
     def deltaRow(d1: Int, d2: Int) = Block(b1.deltaRow(d1), b2.deltaRow(d2))
+//    {
+    //      try{
+    //        Block(b1.deltaRow(d1), b2.deltaRow(d2))
+    //      }
+    //      catch {
+    //        case _ : IllegalArgumentException => this
+    //      }
+    //    }
 
     /**
      * Returns a block where the `col` coordinates of `b1` and `b2` are
      * changed by `d1` and `d2`, respectively.
      */
     def deltaCol(d1: Int, d2: Int) = Block(b1.deltaCol(d1), b2.deltaCol(d2))
+//    {
+//      try {
+//        Block(b1.deltaCol(d1), b2.deltaCol(d2))
+//      }
+//      catch {
+//        case _ : IllegalArgumentException => this
+//      }
+//    }
 
 
     /** The block obtained by moving left */
@@ -132,7 +150,18 @@ trait GameDef {
      * Returns the list of blocks that can be obtained by moving
      * the current block, together with the corresponding move.
      */
-    def neighbors: List[(Block, Move)] = (left, Left) :: (right, Right) :: (up, Up) :: (down, Down) :: List()
+    def neighbors: List[(Block, Move)] = {
+//      val l = Try((left, Left)).getOrElse[(Block, Move)]((null, null))
+//      val r = Try((right, Right)).getOrElse[(Block, Move)]((null, null))
+//      val u = Try((up, Up)).getOrElse[(Block, Move)]((null, null))
+//      val d = Try((down, Down)).getOrElse[(Block, Move)]((null, null))
+//
+//      val res  = l :: r :: d :: u :: List() filter { case (block, move) => block != null && move != null}
+//      res
+      List((left,Left),(right,Right),(up,Up),(down,Down))
+    }
+
+
 
 
     /**
@@ -146,7 +175,7 @@ trait GameDef {
     /**
      * Returns `true` if the block is standing.
      */
-    def isStanding: Boolean = (b1.row < b2.col) && (b1.col == b2.col)
+    def isStanding: Boolean = (b1.row == b2.row) && (b1.col == b2.col)
 
     /**
      * Returns `true` if the block is entirely inside the terrain.

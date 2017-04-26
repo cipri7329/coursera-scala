@@ -64,14 +64,13 @@ trait StringParserTerrain extends GameDef {
         if(cols.length <= pos.col) false
         else {
           val ch = cols(pos.col)
-          if (ch == '-') false
-          else true
+          ch != '-'
         }
       }
-
     }
     check
   }
+
 
   /**
    * This function should return the position of character `c` in the
@@ -82,11 +81,14 @@ trait StringParserTerrain extends GameDef {
    * `Vector` class
    */
   def findChar(c: Char, levelVector: Vector[Vector[Char]]): Pos = {
-    Try((for{
-      row <- levelVector
-      col <- row
-      if(col == c)
-    } yield Pos(levelVector.indexOf(row), row.indexOf(col))).head).getOrElse(Pos(-1, -1))
+//    Try((for{
+//      row <- levelVector
+//      col <- row
+//      if(col == c)
+//    } yield Pos(levelVector.indexOf(row), row.indexOf(col))).head).getOrElse(Pos(-1, -1))
+    def row = levelVector.indexWhere( _.indexWhere(_ == c) > -1)
+    def col = levelVector(row).indexWhere(_ == c)
+    Pos(row, col)
   }
 
   private lazy val vector: Vector[Vector[Char]] =

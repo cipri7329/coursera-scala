@@ -111,6 +111,16 @@ class WikipediaSuite extends FunSuite with BeforeAndAfterAll {
     assert(res2, "occurrencesOfLang given (specific) RDD with one element should equal to 2")
   }
 
+  test("'occurrencesOfLangEmpty' should work for (specific) RDD with empty") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    import WikipediaRanking._
+    val rdd = sc.parallelize(Seq[WikipediaArticle]())
+    val res1 = (occurrencesOfLang("Swift", rdd) == 0)
+    val res2 = (occurrencesOfLang("Java", rdd) == 0)
+    assert(res1, "occurrencesOfLang given (specific) RDD with one element should equal to 1")
+    assert(res2, "occurrencesOfLang given (specific) RDD with one element should equal to 2")
+  }
+
   test("'rankLangs' should work for RDD with two elements") {
     assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
     import WikipediaRanking._
@@ -184,6 +194,17 @@ class WikipediaSuite extends FunSuite with BeforeAndAfterAll {
     val rdd = sc.parallelize(articles)
     val ranked = rankLangsReduceByKey(langs, rdd)
     val res = (ranked.head._1 == "Java")
+    assert(res)
+  }
+
+  test("'rankLangsReduceByKeyEmpty' should work for a simple RDD with empty") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    import WikipediaRanking._
+    val langs = List("Scala", "Java", "Groovy", "Haskell", "Erlang")
+    val articles = List[WikipediaArticle]()
+    val rdd = sc.parallelize(articles)
+    val ranked = rankLangsReduceByKey(langs, rdd)
+    val res = (ranked.size == 0)
     assert(res)
   }
 

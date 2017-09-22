@@ -17,3 +17,4 @@ libraryDependencies ++= Seq(
 
 // include the common dir
 commonSourcePackages += "common"
+

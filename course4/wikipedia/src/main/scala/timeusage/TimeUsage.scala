@@ -253,23 +253,35 @@ object TimeUsage {
     * Hint: you should use the `groupByKey` and `typed.avg` methods.
     */
   def timeUsageGroupedTyped(summed: Dataset[TimeUsageRow]): Dataset[TimeUsageRow] = {
-    import org.apache.spark.sql.expressions.scalalang.typed
-    summed.groupByKey((row: TimeUsageRow) => (row.working, row.sex, row.age))
+    import org.apache.spark.sql.expressions.scalalang.typed._
+//    summed.groupByKey((row: TimeUsageRow) => (row.working, row.sex, row.age))
+//      .agg(
+//        round(typed.avg[TimeUsageRow](_.primaryNeeds), 1).as(Encoders.DOUBLE),
+//        round(typed.avg[TimeUsageRow](_.work), 1).as(Encoders.DOUBLE),
+//        round(typed.avg[TimeUsageRow](_.other), 1).as(Encoders.DOUBLE)
+//      )
+//      .map(row =>
+//        TimeUsageRow(
+//          row._1._1,
+//          row._1._2,
+//          row._1._3,
+//          row._2,
+//          row._3,
+//          row._4
+//        )
+//      )
+
+    def round1(d:Double) = (d * 10).round / 10d
+
+    summed
+      .groupByKey(row => (row.working, row.sex, row.age))
       .agg(
-        round(typed.avg[TimeUsageRow](_.primaryNeeds), 1).as(Encoders.DOUBLE),
-        round(typed.avg[TimeUsageRow](_.work), 1).as(Encoders.DOUBLE),
-        round(typed.avg[TimeUsageRow](_.other), 1).as(Encoders.DOUBLE)
-      )
-      .map(row =>
-        TimeUsageRow(
-          row._1._1,
-          row._1._2,
-          row._1._3,
-          row._2,
-          row._3,
-          row._4
-        )
-      )
+        avg(_.primaryNeeds),
+        avg(_.work),
+        avg(_.other)
+      ).map {
+      case ((working, sex, age), primaryNeeds, work, other) => TimeUsageRow(working, sex, age,  round1(primaryNeeds), round1(work), round1(other))
+    }.orderBy('working, 'sex, 'age)
   }
 }
 
